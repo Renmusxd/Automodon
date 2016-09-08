@@ -29,42 +29,51 @@ def get_all_tweets(screen_name):
     alltweets = []
 
     new_tweets = api.user_timeline(screen_name=screen_name,count=200)
-    oldest = alltweets[-1].id - 1 if len(alltweets)>0 else 0
-    oldestread = None
+
+    oldest = new_tweets[-1].id - 1 if len(new_tweets)>0 else 0
+    mostrecent = new_tweets[0].id if len(new_tweets)>0 else 0
+    storedto = None
 
     if os.path.exists(MOST_RECENT_FILE):
         try:
-            with open(MOST_RECENT_FILE, "w") as f:
-                oldestread = int(f.readline())
-        except:
-            pass
-    if oldestread is None:
-        with open(MOST_RECENT_FILE,"w") as f:
-            f.write(str(oldest))
-            oldestread = oldest
+            with open(MOST_RECENT_FILE, "r") as f:
+                storedto = int(f.read())
+            print("[*] Already have tweets up to {}".format(storedto))
+        except Exception as e:
+            print("[*] Have no record of stored tweets: "+str(e))
 
     # save most recent tweets
-    alltweets.extend(new_tweets)
+    hitlimit = False
+    for tweet in new_tweets:
+        if storedto is None or tweet.id > storedto:
+            alltweets.append(tweet)
+        else:
+            print("[*] Found id within range... ending")
+            hitlimit = True
 
     # keep grabbing tweets until there are no tweets left to grab
-    hitlimit = False
     while len(new_tweets) > 0 and not hitlimit:
         print("getting tweets before %s" % (oldest))
 
         # all subsiquent requests use the max_id param to prevent duplicates
-        new_tweets = api.user_timeline(screen_name = screen_name,count=200,max_id=oldest)
+        new_tweets = api.user_timeline(screen_name=screen_name, count=200, max_id=oldest)
 
         # update the id of the oldest tweet less one
-        oldest = alltweets[-1].id - 1
-
-        for tweet in new_tweets:
-            if tweet.id > oldestread:
-                alltweets.append(tweet)
-            else:
-                hitlimit = True
-                break
+        if len(new_tweets)>0:
+            oldest = new_tweets[-1].id - 1
+            for tweet in new_tweets:
+                if storedto is None or tweet.id > storedto:
+                    alltweets.append(tweet)
+                else:
+                    print("[*] Found id within range... ending")
+                    hitlimit = True
+                    break
 
         print("...%s tweets downloaded so far" % (len(alltweets)))
+
+    if storedto is None:
+        with open(MOST_RECENT_FILE,"w") as f:
+            f.write(str(mostrecent))
 
     # transform the tweepy tweets into a 2D array that will populate the csv
     printable = set(string.printable)
