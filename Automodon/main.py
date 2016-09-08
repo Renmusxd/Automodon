@@ -42,4 +42,3 @@ if __name__ == "__main__":
         api.update_status(newtweet)
         iters -= 1
 
-    
