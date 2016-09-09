@@ -50,6 +50,7 @@ def get_all_tweets(screen_name):
         else:
             print("[*] Found id within range... ending")
             hitlimit = True
+            break
 
     # keep grabbing tweets until there are no tweets left to grab
     while len(new_tweets) > 0 and not hitlimit:
@@ -75,21 +76,22 @@ def get_all_tweets(screen_name):
         with open(MOST_RECENT_FILE,"w") as f:
             f.write(str(mostrecent))
 
-    # transform the tweepy tweets into a 2D array that will populate the csv
-    printable = set(string.printable)
-    outtweets = ["".join(filter(lambda x: x in printable, tweet.text))
-                 for tweet in alltweets]
+    if len(alltweets)>0:
+        # transform the tweepy tweets into a 2D array that will populate the csv
+        printable = set(string.printable)
+        outtweets = ["".join(filter(lambda x: x in printable, tweet.text))
+                     for tweet in alltweets]
 
-    with open('%s_tweets.csv' % screen_name, 'a') as f:
-        for singletweet in outtweets:
-            if not (singletweet.startswith('RT') or
-                        singletweet.startswith("\"") or
-                        ("http" in singletweet)):
-                if singletweet[0]==".":
-                    singletweet = singletweet[1:]
-                f.write(singletweet
-                        .replace('\n',' ')
-                        .replace('\r',' ')+"\n")
+        with open('%s_tweets.csv' % screen_name, 'a') as f:
+            for singletweet in outtweets:
+                if not (singletweet.startswith('RT') or
+                            singletweet.startswith("\"") or
+                            ("http" in singletweet)):
+                    if singletweet[0]==".":
+                        singletweet = singletweet[1:]
+                    f.write(singletweet
+                            .replace('\n',' ')
+                            .replace('\r',' ')+"\n")
 
 if __name__ == '__main__':
     get_all_tweets("realDonaldTrump")

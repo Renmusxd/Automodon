@@ -1,18 +1,20 @@
 
 import random
 import re
-
+import time
+from pprint import pprint
 
 class MarkovTweets:
     ENDSPECIALCHAR = " "
     punct = '.!?'
     CONTINUE_CHANGE = 0.3
 
-    def __init__(self, quotefile):
+    def __init__(self, quotefile, order=1):
         self.startnode = MarkovNode('^',startnode=True)
         self.endnode = MarkovNode(MarkovTweets.ENDSPECIALCHAR,endnode=True)
+        self.order = order
         self.model = {}
-        self.model[MarkovTweets.ENDSPECIALCHAR] = self.endnode  # If ends without punctuation
+        self.model[(MarkovTweets.ENDSPECIALCHAR,)] = self.endnode  # If ends without punctuation
         with open(quotefile, "r") as f:
             i = 0
             for line in f:
@@ -32,22 +34,22 @@ class MarkovTweets:
 
                 if len(words)>0:
                     if words[0] not in self.model:
-                        self.model[words[0]] = MarkovNode(words[0])
+                        self.model[(words[0],)] = MarkovNode((words[0],))
                     self.startnode.addNext(words[0])
 
                     for i in range(0,len(words)-1):
-                        word = words[i]
-                        nextword = words[i+1]
-                        if not word in self.model:
-                            self.model[word] = MarkovNode(word)
-                        self.model[word].addNext(nextword)
+                        for order in range(min(i+1,self.order),0,-1):
+                            wordtup = tuple( [words[i-j] for j in range(order-1,-1,-1)] )
+                            nextword = words[i+1]
+                            if not wordtup in self.model:
+                                self.model[wordtup] = MarkovNode(wordtup)
+                            self.model[wordtup].addNext(nextword)
 
-                    lastword = words[-1]
-
-                    if not lastword in self.model:
-                        self.model[lastword] = MarkovNode(lastword)
-
-                    self.model[lastword].addNext(ending)
+                    for order in range(min(len(words)-1, self.order), 0, -1):
+                        lastword = tuple( [words[-1-j] for j in range(order-1,-1,-1)] )
+                        if not lastword in self.model:
+                            self.model[lastword] = MarkovNode(lastword)
+                        self.model[lastword].addNext(ending)
 
     def makeTweet(self, charlimit=140):
         newtweet = ""
@@ -68,23 +70,33 @@ class MarkovTweets:
         return newtweet
 
     def makeSentence(self, charlimit=140):
-        sent = ""
+        totchars = 0
+        words = []
+        endword = None
         selnode = self.startnode
-        while len(sent)<charlimit:
+        while totchars<charlimit:
+            time.sleep(1)
             nxtwrd = selnode.getNext()
+            if nxtwrd not in MarkovTweets.punct and nxtwrd != MarkovTweets.ENDSPECIALCHAR:
+                words.append(nxtwrd)
+                lastwords = None
+                for order in range(self.order,0,-1): # [self.order, ..., 1]
+                    lastwords = tuple([words[-1 - j] for j in range(min(len(words)-1, order-1), -1, -1)])
+                    if lastwords not in self.model:
+                        if order==1:
+                            print("[!] " + str(selnode.word) + " -> " + str(lastwords))
+                            print(selnode.next)
+                            raise Exception("Error forming tweet")
+                    else:
+                        break
 
-            if nxtwrd not in MarkovTweets.punct and nxtwrd != " ":
-                if nxtwrd not in self.model:
-                    print("[!] " + selnode.word + " -> " + nxtwrd)
-                    print(selnode.next)
-                    input()
-                selnode = self.model[nxtwrd]
-                sent += " "+nxtwrd
+                selnode = self.model[lastwords]
+                totchars += len(nxtwrd) + 1
             else:
-                sent += nxtwrd
+                endword = nxtwrd
                 break
 
-        return sent
+        return " ".join(words) + (endword if endword is not None else "")
 
 class MarkovNode:
     def __init__(self, word,startnode=False,endnode=False):
@@ -113,6 +125,9 @@ class MarkovNode:
             return " "
         return self.nextobjs[-1][0]
 
+    def __repr__(self):
+        return "MNODE["+str(self.word)+":"+str(self.next)+"]"
+
 def enumerateSplit(s, pat):
     lastend = 0
     for m in re.finditer(pat,s):
@@ -122,5 +137,5 @@ def enumerateSplit(s, pat):
     yield s[lastend:], MarkovTweets.ENDSPECIALCHAR
 
 if __name__=="__main__":
-    mt = MarkovTweets("realDonaldTrump_tweets.csv")
+    mt = MarkovTweets("realDonaldTrump_tweets.csv",2)
     print(mt.makeTweet())

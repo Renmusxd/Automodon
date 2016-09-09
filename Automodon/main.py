@@ -27,12 +27,17 @@ if __name__ == "__main__":
     else:
         sleep_time = SLEEP_TIME
 
+    if len(sys.argv) > 3:
+        markov_order = int(sys.argv[3])
+    else:
+        markov_order = 1
+
     keys = readKeys('twitterkeys.txt')
     auth = tweepy.OAuthHandler(keys["CONSUMER_KEY"], keys["CONSUMER_SECRET"])
     auth.set_access_token(keys["ACCESS_KEY"], keys["ACCESS_SECRET"])
     api = tweepy.API(auth)
 
-    mtweets = MarkovTweets("realDonaldTrump_tweets.csv")
+    mtweets = MarkovTweets("realDonaldTrump_tweets.csv",markov_order)
 
     while iters is None or iters>0:
         time.sleep(sleep_time)
