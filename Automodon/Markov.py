@@ -137,5 +137,5 @@ def enumerateSplit(s, pat):
     yield s[lastend:], MarkovTweets.ENDSPECIALCHAR
 
 if __name__=="__main__":
-    mt = MarkovTweets("realDonaldTrump_tweets.csv",2)
+    mt = MarkovTweets("realDonaldTrump_tweets.txt",2)
     print(mt.makeTweet())

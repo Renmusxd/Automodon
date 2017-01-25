@@ -1,11 +1,13 @@
 import tweepy, time
-import sys
+import sys, os
+import pickle
 try:
     from Markov import MarkovTweets
 except:
     from .Markov import MarkovTweets
 
 SLEEP_TIME = 60*30
+PICKLE_FILE = 'trump.pickle'
 
 def readKeys(filename):
     keydict = {}
@@ -37,7 +39,18 @@ if __name__ == "__main__":
     auth.set_access_token(keys["ACCESS_KEY"], keys["ACCESS_SECRET"])
     api = tweepy.API(auth)
 
-    mtweets = MarkovTweets("realDonaldTrump_tweets.csv",markov_order)
+    if os.path.exists(PICKLE_FILE):
+        print("[*] Loading Markov object")
+        with open(PICKLE_FILE,'rb') as f:
+            mtweets = pickle.loads(f)
+        print("[*] Loaded")
+    else:
+        print("[*] Making new Markov object")
+        mtweets = MarkovTweets("realDonaldTrump_tweets.txt",markov_order)
+        print("[*] Saving...")
+        with open(PICKLE_FILE, 'wb') as f:
+            pickle.dump(mtweets,f)
+        print("\tSaved!")
 
     while iters is None or iters>0:
         time.sleep(sleep_time)
