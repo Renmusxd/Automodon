@@ -46,7 +46,7 @@ if __name__ == "__main__":
         print("[*] Loaded")
     else:
         print("[*] Making new Markov object")
-        mtweets = MarkovTweets("realDonaldTrump_tweets.txt",markov_order)
+        mtweets = MarkovTweets("tweets.txt",markov_order)
         print("[*] Saving...")
         with open(PICKLE_FILE, 'wb') as f:
             pickle.dump(mtweets,f)

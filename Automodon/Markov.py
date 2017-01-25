@@ -15,9 +15,10 @@ class MarkovTweets:
         self.order = order
         self.model = {}
         self.model[(MarkovTweets.ENDSPECIALCHAR,)] = self.endnode  # If ends without punctuation
-        with open(quotefile, "r") as f:
+        with open(quotefile, "rb") as f:
             i = 0
-            for line in f:
+            for bytesline in f:
+                line = bytesline.decode('utf-8','ignore')
                 self.addTweet(line)
                 i += 1
 
@@ -137,5 +138,5 @@ def enumerateSplit(s, pat):
     yield s[lastend:], MarkovTweets.ENDSPECIALCHAR
 
 if __name__=="__main__":
-    mt = MarkovTweets("realDonaldTrump_tweets.txt",2)
+    mt = MarkovTweets("tweets.txt",2)
     print(mt.makeTweet())
