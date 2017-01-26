@@ -42,7 +42,7 @@ if __name__ == "__main__":
     if os.path.exists(PICKLE_FILE):
         print("[*] Loading Markov object")
         with open(PICKLE_FILE,'rb') as f:
-            mtweets = pickle.loads(f)
+            mtweets = pickle.load(f)
         print("[*] Loaded")
     else:
         print("[*] Making new Markov object")

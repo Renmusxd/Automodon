@@ -1,8 +1,7 @@
-
+import os, pickle
 import random
 import re
 import time
-from pprint import pprint
 
 class MarkovTweets:
     ENDSPECIALCHAR = " "
@@ -76,7 +75,6 @@ class MarkovTweets:
         endword = None
         selnode = self.startnode
         while totchars<charlimit:
-            time.sleep(1)
             nxtwrd = selnode.getNext()
             if nxtwrd not in MarkovTweets.punct and nxtwrd != MarkovTweets.ENDSPECIALCHAR:
                 words.append(nxtwrd)
@@ -138,5 +136,17 @@ def enumerateSplit(s, pat):
     yield s[lastend:], MarkovTweets.ENDSPECIALCHAR
 
 if __name__=="__main__":
-    mt = MarkovTweets("tweets.txt",2)
-    print(mt.makeTweet())
+    PICKLE_FILE = 'trump.pickle'
+    if os.path.exists(PICKLE_FILE):
+        print("[*] Loading Markov object")
+        with open(PICKLE_FILE,'rb') as f:
+            mtweets = pickle.load(f)
+        print("[*] Loaded")
+    else:
+        print("[*] Making new Markov object")
+        mtweets = MarkovTweets("tweets.txt",2)
+        print("[*] Saving...")
+        with open(PICKLE_FILE, 'wb') as f:
+            pickle.dump(mtweets,f)
+        print("\tSaved!")
+    print(mtweets.makeTweet())

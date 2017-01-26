@@ -1,7 +1,6 @@
 # IntelliJ project files
 .idea
 Automodon/twitterkeys.txt
-Automodon/realDonaldTrump_tweets.txt
 Automodon/recentid.txt
 Automodon/__pycache__
 **.pyc
